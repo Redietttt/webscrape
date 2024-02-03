@@ -1,8 +1,9 @@
+import time
 import requests
 from bs4 import BeautifulSoup
 import telegram
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 bot_token = "6821124656:AAF-yllAl1m3wusP3Cap90cbgQGihhCCsP8"
 bot = telegram.Bot(token=bot_token)
@@ -27,15 +28,11 @@ async def scrape_books():
         price_element = element.find('ul', class_='prize').find('li')
         price = price_element.text.strip() if price_element else "N/A"
 
-        read_now_link_element = element.find('a', class_='first__img')
-        read_now_link = read_now_link_element['href'] if read_now_link_element else "N/A"
-
         books.append({
             'title': title,
             'img_url': img_url,
             'category': category,
-            'price': price,
-            'read_now_link': read_now_link
+            'price': price
         })
 
     return books
@@ -47,8 +44,7 @@ async def send_books_to_user(update: Update, context: ContextTypes.DEFAULT_TYPE)
         message = f"Title: {book['title']}\n" \
                   f"Image URL: {book['img_url']}\n" \
                   f"Category: {book['category']}\n" \
-                  f"Price: {book['price']}\n" \
-                  f"Read Now Link: {book['read_now_link']}"
+                  f"Price: {book['price']}"
 
         try:
             await update.message.reply_text(message)
@@ -56,11 +52,12 @@ async def send_books_to_user(update: Update, context: ContextTypes.DEFAULT_TYPE)
             print(f"Failed to send message: {e}")
 
 def main() -> None:
+    time.sleep(5)  # Add a delay before starting polling
     application = Application.builder().token(bot_token).build()
 
     application.add_handler(CommandHandler("start", send_books_to_user))
 
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
